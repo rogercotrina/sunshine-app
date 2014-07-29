@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:title="@string/pref_location_label"
+        android:key="@string/pref_location_key"
+        android:defaultValue="@string/pref_location_default"
+        android:inputType="textPostalAddress"
+        android:singleLine="true"
+        android:maxLength="@integer/zip_code_length"
+        />
+
+    <ListPreference
+        android:key="@string/pref_temperature_key"
+        android:title="@string/pref_temperature_label"
+        android:dialogTitle="@string/pref_temperature_dialog"
+        android:entries="@array/pref_temperature_entries"
+        android:entryValues="@array/pref_temperature_values"
+        android:defaultValue="@string/pref_temperature_units_metric"
+        />
+
+</PreferenceScreen>
