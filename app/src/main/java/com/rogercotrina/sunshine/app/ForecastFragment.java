@@ -236,7 +236,7 @@ public class ForecastFragment extends Fragment {
                 high = (high * 1.8) + 32;
                 low = (low * 1.8) + 32;
             } else if (!unitType.equals(metricString)) {
-                Log.d(LOG_TAG, "Unit type not found: " + unitType);
+                //Log.d(LOG_TAG, "Unit type not found: " + unitType);
             }
 
             // For presentation, assume the user doesn't care about tenths of a degree.
