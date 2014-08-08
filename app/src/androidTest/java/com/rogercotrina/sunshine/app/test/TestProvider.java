@@ -1,8 +1,9 @@
 package com.rogercotrina.sunshine.app.test;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.test.AndroidTestCase;
 import android.util.Log;
 import com.rogercotrina.sunshine.app.data.WeatherDbHelper;
@@ -14,11 +15,15 @@ import static com.rogercotrina.sunshine.app.data.WeatherContract.LocationEntry;
 import static com.rogercotrina.sunshine.app.data.WeatherContract.WeatherEntry;
 
 /**
+ * Test Provider
  * Created by rogercotrina on 7/31/14.
  */
 public class TestProvider extends AndroidTestCase {
 
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
+
+    public static String TEST_COLUMN_DATETEXT = "20141205";
+    public static String TEST_LOCATION_SETTING = "99705";
 
     public void testDeleteDb() {
         mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
@@ -46,16 +51,16 @@ public class TestProvider extends AndroidTestCase {
 
     public void testInsertReadProvider() {
 
-        WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
-        SQLiteDatabase database = dbHelper.getWritableDatabase();
 
         // Create map of values
         ContentValues locationValues = getLocationContentValues();
 
-        long locationRowId = database.insert(LocationEntry.TABLE_NAME, null, locationValues);
+        Uri locationUri = mContext.getContentResolver().insert(LocationEntry.CONTENT_URI, locationValues);
 
-        assertTrue(locationRowId != -1);
-        Log.d(LOG_TAG, "New row id: " + locationRowId);
+        long locationRowId = ContentUris.parseId(locationUri);
+
+        //assertTrue(locationRowId != -1);
+        //Log.d(LOG_TAG, "New row id: " + locationRowId);
 
         Cursor locationCursor = mContext.getContentResolver().query(
                 LocationEntry.CONTENT_URI,
@@ -65,6 +70,7 @@ public class TestProvider extends AndroidTestCase {
                 null);
 
         validateContent(locationCursor, locationValues);
+        locationCursor.close();
 
         locationCursor = mContext.getContentResolver().query(
                 LocationEntry.buildLocationUri(locationRowId),
@@ -74,10 +80,13 @@ public class TestProvider extends AndroidTestCase {
                 null);
 
         validateContent(locationCursor, locationValues);
+        locationCursor.close();
 
         ContentValues weatherValues = getWeatherContentValues(locationRowId);
 
-        long weatherRowId = database.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
+        Uri weatherUri = mContext.getContentResolver().insert(WeatherEntry.CONTENT_URI, weatherValues);
+
+        long weatherRowId = ContentUris.parseId(weatherUri);
         assertTrue(weatherRowId != -1);
         Log.d(LOG_TAG, "New row id: " + weatherRowId);
 
@@ -90,8 +99,18 @@ public class TestProvider extends AndroidTestCase {
                 null);
 
         validateContent(weatherCursor, weatherValues);
+        weatherCursor.close();
 
-        dbHelper.close();
+        weatherCursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocationWithDate(TEST_LOCATION_SETTING, TEST_COLUMN_DATETEXT),
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        validateContent(weatherCursor, weatherValues);
+        weatherCursor.close();
 
     }
 

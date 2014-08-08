@@ -20,6 +20,9 @@ public class TestDb extends AndroidTestCase {
 
     public static final String LOG_TAG = TestDb.class.getSimpleName();
 
+    public static String TEST_COLUMN_DATETEXT = "20141205";
+    public static String TEST_LOCATION_SETTING = "99705";
+
     public void testCreateDb() {
         mContext.deleteDatabase(WeatherDbHelper.DATABASE_NAME);
         SQLiteDatabase database = new WeatherDbHelper(this.mContext).getWritableDatabase();
@@ -50,7 +53,7 @@ public class TestDb extends AndroidTestCase {
                 null);
 
         validateContent(locationCursor, locationValues);
-
+        locationCursor.close();
 
         ContentValues weatherValues = getWeatherContentValues(locationRowId);
 
@@ -68,6 +71,28 @@ public class TestDb extends AndroidTestCase {
                 null);
 
         validateContent(weatherCursor, weatherValues);
+
+        weatherCursor.close();
+
+        weatherCursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocation(TestDb.TEST_LOCATION_SETTING),
+                null,
+                null,
+                null,
+                null,
+                null);
+        validateContent(weatherCursor, weatherValues);
+
+        weatherCursor = mContext.getContentResolver().query(
+                WeatherEntry.buildWeatherLocationWithStartDate(TestDb.TEST_LOCATION_SETTING,
+                        TEST_COLUMN_DATETEXT),
+                null,
+                null,
+                null,
+                null,
+                null);
+        validateContent(weatherCursor, weatherValues);
+        weatherCursor.close();
 
         dbHelper.close();
 
