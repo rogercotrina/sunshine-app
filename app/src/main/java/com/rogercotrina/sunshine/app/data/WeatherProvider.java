@@ -188,7 +188,6 @@ public class WeatherProvider extends ContentProvider {
                 return LocationEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
-
         }
     }
 
@@ -227,13 +226,105 @@ public class WeatherProvider extends ContentProvider {
         return returnUri;
     }
 
+    /**
+     *
+     * @param uri
+     * @param selection - not passing a selection will delete all rows in table.
+     * @param selectionArgs
+     * @return
+     */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+
+        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        final int match = uriMatcher.match(uri);
+        int rowsAffected;
+        switch (match) {
+            // "weather/"
+            case WEATHER: {
+                rowsAffected = deleteEntry(database, WeatherEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            }
+            // "location/"
+            case LOCATION: {
+                rowsAffected = deleteEntry(database, LocationEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+
+        }
+        if (null == selection || 0 != rowsAffected) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowsAffected;
+    }
+
+    private int deleteEntry(SQLiteDatabase database, String tableName, String selection, String[] selectionArgs) {
+        int rowsAffected = database.delete(tableName, selection, selectionArgs);
+        if (rowsAffected < 0) {
+            throw new SQLiteException("Failed to delete row in table: " + tableName);
+        }
+        return rowsAffected;
     }
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        return 0;
+        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        final int match = uriMatcher.match(uri);
+        int rowsAffected;
+        switch (match) {
+            // "weather/"
+            case WEATHER: {
+                rowsAffected = updateEntry(database, values, WeatherEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            }
+            // "location/"
+            case LOCATION: {
+                rowsAffected = updateEntry(database, values, LocationEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+
+        return rowsAffected;
+    }
+
+    private int updateEntry(SQLiteDatabase database, ContentValues values, String tableName, String selection, String[] selectionArgs) {
+        int rowsAffected = database.update(tableName, values, selection, selectionArgs);
+        if (rowsAffected < 0) {
+            throw new SQLiteException("Failed to updated row in table: " + tableName);
+        }
+        return rowsAffected;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        final int match = uriMatcher.match(uri);
+        switch (match) {
+            case WEATHER: {
+                database.beginTransaction();
+                int rowsAffected = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = database.insert(WeatherEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            rowsAffected++;
+                        }
+                    }
+                    database.setTransactionSuccessful();
+                } finally {
+                    database.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return rowsAffected;
+            }
+            default: {
+                return super.bulkInsert(uri, values);
+            }
+        }
     }
 }
