@@ -4,6 +4,10 @@ import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * /**
  * Defines table and column names for the weather database.
@@ -27,6 +31,28 @@ public class WeatherContract {
     // At least, let's hope not.  Don't be that dev, reader.  Don't be that dev.
     public static final String PATH_WEATHER = "weather";
     public static final String PATH_LOCATION = "location";
+
+    public static String DATE_FORMAT = "yyyyMMdd";
+
+    /**
+     +     * Converts Date class to a string representation, used for easy comparison and database lookup.
+     +     * @param date The input date
+     +     * @return a DB-friendly representation of the date, using the format defined in DATE_FORMAT.
+     +     */
+    public static String getDbDateString(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
+        return simpleDateFormat.format(date);
+    }
+
+    public static Date getDbDateFromString(String dateText) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DATE_FORMAT);
+        try {
+            return simpleDateFormat.parse(dateText);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /* Inner class that defines the table contents of the weather table */
     public static final class WeatherEntry implements BaseColumns {

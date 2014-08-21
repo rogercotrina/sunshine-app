@@ -1,18 +1,34 @@
 package com.rogercotrina.sunshine.app;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.ShareActionProvider;
-import android.view.*;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
+
+import static com.rogercotrina.sunshine.app.data.WeatherContract.WeatherEntry;
 
 
 public class DetailsActivity extends ActionBarActivity {
 
     public static final String SUNSHINE_HASHTAG = "#SunshineApp";
+
+    public static String DATE_KEY = "forecast_date";
+    private static final String LOCATION_KEY = "location";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,12 +61,33 @@ public class DetailsActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static class DetailsFragment extends Fragment {
-        private DetailsFragment() {
+    public static class DetailsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+        public static final String LOG_TAG = DetailsFragment.class.getSimpleName();
+
+        public DetailsFragment() {
+            setHasOptionsMenu(true);
         }
+
         private ShareActionProvider shareActionProvider;
-        private TextView contentTextView;
+        private String location;
+        private String forecast;
+
+        private static final int DETAIL_LOADER = 0;
+
+        private static final String[] FORECAST_COLUMNS = {
+                WeatherEntry.TABLE_NAME + "." + WeatherEntry._ID,
+                WeatherEntry.COLUMN_DATETEXT,
+                WeatherEntry.COLUMN_SHORT_DESC,
+                WeatherEntry.COLUMN_MAX_TEMP,
+                WeatherEntry.COLUMN_MIN_TEMP,
+        };
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            outState.putString(LOCATION_KEY, location);
+            super.onSaveInstanceState(outState);
+        }
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -59,15 +96,16 @@ public class DetailsActivity extends ActionBarActivity {
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            Intent receivedIntent = getActivity().getIntent();
-            View rootView = inflater.inflate(R.layout.fragment_details, container, false);
-            if (null != receivedIntent) {
-                String weatherDayData = receivedIntent.getStringExtra(AppConstants.WEATHER_DAY_DATA);
-                contentTextView = (TextView) rootView.findViewById(R.id.details_text_data);
-                contentTextView.setText(weatherDayData);
+        public void onResume() {
+            super.onResume();
+            if (null != location && !location.equalsIgnoreCase(Utility.getPreferredLocation(getActivity()))) {
+                getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
             }
-            return rootView;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_details, container, false);
         }
 
         @Override
@@ -75,7 +113,9 @@ public class DetailsActivity extends ActionBarActivity {
             inflater.inflate(R.menu.detailsfragment, menu);
             MenuItem menuItem = menu.findItem(R.id.action_menu_item_share);
             shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
-            if (null != shareActionProvider) {
+
+            // If onLoadFinished happens before, we can go ahead and share the intent.
+            if (null != forecast) {
                 shareActionProvider.setShareIntent(getDefaultShareIntent());
             }
         }
@@ -84,9 +124,72 @@ public class DetailsActivity extends ActionBarActivity {
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
             intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, contentTextView.getText().toString() + SUNSHINE_HASHTAG);
+            intent.putExtra(Intent.EXTRA_TEXT, forecast + SUNSHINE_HASHTAG);
             return intent;
         }
 
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            if (null != savedInstanceState) {
+                location = savedInstanceState.getString(LOCATION_KEY);
+            }
+            super.onActivityCreated(savedInstanceState);
+        }
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+            Intent receivedIntent = getActivity().getIntent();
+            // Early return.
+            if (null != receivedIntent || !receivedIntent.hasExtra(DATE_KEY)) {
+                return null;
+            }
+
+            String forecastDate = receivedIntent.getStringExtra(DATE_KEY);
+            String sortOrder = WeatherEntry.COLUMN_DATETEXT + " ASC";
+
+            location = Utility.getPreferredLocation(getActivity());
+            Uri weatherForLocationUri = WeatherEntry.buildWeatherLocationWithDate(location, forecastDate);
+            return new CursorLoader(getActivity(),
+                    weatherForLocationUri,
+                    FORECAST_COLUMNS,
+                    null,
+                    null,
+                    sortOrder
+                    );
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+            Log.v(LOG_TAG, "In onLoadFinished");
+            if (!cursor.moveToFirst()) {
+                // Early return if loader did not return any cursor items.
+                return;
+            }
+
+            // Bind data into views.
+            String dateString = Utility.formatDate(cursor.getString(cursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT)));
+            ((TextView) getView().findViewById(R.id.detail_date_textview)).setText(dateString);
+
+            String weatherDescription = cursor.getString(cursor.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC));
+            ((TextView) getView().findViewById(R.id.detail_forecast_textview)).setText(weatherDescription);
+
+            boolean isMetric = Utility.isMetric(getActivity());
+            String high = Utility.formatTemperature(cursor.getDouble(cursor.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP)), isMetric);
+            ((TextView) getView().findViewById(R.id.detail_high_textview)).setText(high);
+            String low = Utility.formatTemperature(cursor.getDouble(cursor.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP)), isMetric);
+            ((TextView) getView().findViewById(R.id.detail_low_textview)).setText(low);
+
+            forecast = String.format("%s - %s - %s/%s", dateString, weatherDescription, high, low);
+
+            if (null != shareActionProvider) {
+                shareActionProvider.setShareIntent(getDefaultShareIntent());
+            }
+
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        }
     }
 }

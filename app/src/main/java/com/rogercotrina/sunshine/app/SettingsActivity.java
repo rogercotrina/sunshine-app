@@ -6,10 +6,14 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
+import static com.rogercotrina.sunshine.app.data.WeatherContract.WeatherEntry;
+
 /**
  * Created by rogercotrina on 7/28/14.
  */
 public class SettingsActivity extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
+
+    private boolean bindingPreference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +30,9 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
      * is changed.)
      */
     private void bindPreferenceSummaryToValue(Preference preference) {
+
+        bindingPreference = true;
+
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(this);
 
@@ -35,12 +42,25 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
                 PreferenceManager
                         .getDefaultSharedPreferences(preference.getContext())
                         .getString(preference.getKey(), ""));
+
+        bindingPreference = false;
     }
 
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String stringValue = newValue.toString();
+
+        // only update when we are not starting the activity
+        if (!bindingPreference) {
+            if (preference.getKey().equals(getString(R.string.pref_location_key))) {
+                FetchWeatherTask weatherTask = new FetchWeatherTask(this);
+                String location = newValue.toString();
+                weatherTask.execute(location);
+            } else {
+                getContentResolver().notifyChange(WeatherEntry.CONTENT_URI, null);
+            }
+        }
 
         if (preference instanceof ListPreference) {
             // For list preferences, look up the correct display value in
