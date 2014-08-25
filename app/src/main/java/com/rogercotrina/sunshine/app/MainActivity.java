@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -24,37 +23,6 @@ public class MainActivity extends ActionBarActivity {
                     .add(R.id.container, new ForecastFragment())
                     .commit();
         }
-        Log.d(TAG, "onCreate");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
     }
 
     @Override
@@ -87,6 +55,7 @@ public class MainActivity extends ActionBarActivity {
         Uri geoLocation = Uri.parse("geo:0,0?q=" + locationValue);
         Intent mapIntent = new Intent(Intent.ACTION_VIEW);
         mapIntent.setData(geoLocation);
+        // Find an app that can supports this intent filter, start activity if found.
         if (null != mapIntent.resolveActivity(getPackageManager())) {
             startActivity(mapIntent);
         }

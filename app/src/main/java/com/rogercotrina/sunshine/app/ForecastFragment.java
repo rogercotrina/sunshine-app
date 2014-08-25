@@ -76,6 +76,24 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.forecastfragment, menu);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_refresh) {
+            updateWeather();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -123,45 +141,21 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             }
         });
 
-
         ListView weatherList = (ListView) rootView.findViewById(R.id.listview_forecast);
         weatherList.setAdapter(listAdapter);
-        weatherList.setOnItemClickListener(weatherOnItemClickListener());
-
-        return rootView;
-    }
-
-
-    private AdapterView.OnItemClickListener weatherOnItemClickListener() {
-        return new AdapterView.OnItemClickListener() {
+        weatherList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = listAdapter.getCursor();
                 if (null != cursor && cursor.moveToPosition(position)) {
-                    Intent weatherDataIntent = new Intent(getActivity(), DetailsActivity.class);
-                    weatherDataIntent.putExtra(DetailsActivity.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
-                    startActivity(weatherDataIntent);
+                    Intent intent = new Intent(getActivity(), DetailsActivity.class)
+                            .putExtra(DetailsActivity.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
+                    startActivity(intent);
                 }
             }
-        };
-    }
+        });
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.forecastfragment, menu);
-
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_refresh) {
-            updateWeather();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return rootView;
     }
 
     @Override

@@ -5,7 +5,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
@@ -20,12 +19,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import static android.support.v4.app.LoaderManager.LoaderCallbacks;
 import static com.rogercotrina.sunshine.app.data.WeatherContract.WeatherEntry;
 
 
 public class DetailsActivity extends ActionBarActivity {
-
-    public static final String SUNSHINE_HASHTAG = "#SunshineApp";
 
     public static String DATE_KEY = "forecast_date";
     private static final String LOCATION_KEY = "location";
@@ -61,9 +59,11 @@ public class DetailsActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public static class DetailsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    public static class DetailsFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
         public static final String LOG_TAG = DetailsFragment.class.getSimpleName();
+
+        private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
 
         public DetailsFragment() {
             setHasOptionsMenu(true);
@@ -90,15 +90,9 @@ public class DetailsActivity extends ActionBarActivity {
         }
 
         @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setHasOptionsMenu(true);
-        }
-
-        @Override
         public void onResume() {
             super.onResume();
-            if (null != location && !location.equalsIgnoreCase(Utility.getPreferredLocation(getActivity()))) {
+            if (null != location && !location.equals(Utility.getPreferredLocation(getActivity()))) {
                 getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
             }
         }
@@ -111,7 +105,9 @@ public class DetailsActivity extends ActionBarActivity {
         @Override
         public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
             inflater.inflate(R.menu.detailsfragment, menu);
+
             MenuItem menuItem = menu.findItem(R.id.action_menu_item_share);
+
             shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
 
             // If onLoadFinished happens before, we can go ahead and share the intent.
@@ -124,7 +120,7 @@ public class DetailsActivity extends ActionBarActivity {
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
             intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, forecast + SUNSHINE_HASHTAG);
+            intent.putExtra(Intent.EXTRA_TEXT, forecast + FORECAST_SHARE_HASHTAG);
             return intent;
         }
 
@@ -139,9 +135,11 @@ public class DetailsActivity extends ActionBarActivity {
 
         @Override
         public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+
             Intent receivedIntent = getActivity().getIntent();
+
             // Early return.
-            if (null != receivedIntent || !receivedIntent.hasExtra(DATE_KEY)) {
+            if (null == receivedIntent || !receivedIntent.hasExtra(DATE_KEY)) {
                 return null;
             }
 
