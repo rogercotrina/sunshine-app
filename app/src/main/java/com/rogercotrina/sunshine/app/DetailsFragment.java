@@ -159,8 +159,8 @@ public class DetailsFragment extends Fragment implements LoaderManager.LoaderCal
         Log.v(LOG_TAG, "In onLoadFinished");
         if (null != cursor && cursor.moveToFirst()) {
             // Read weather condition ID from cursor
-//            int weatherId = data.getInt(data.getColumnIndex(WeatherEntry.COLUMN_WEATHER_ID));
-            mIconView.setImageResource(R.drawable.ic_launcher);
+            int weatherId = cursor.getInt(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID));
+            mIconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
 
         }
 
