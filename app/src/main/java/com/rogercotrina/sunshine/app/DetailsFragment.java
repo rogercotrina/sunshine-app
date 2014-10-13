@@ -41,6 +41,7 @@ public class DetailsFragment extends Fragment implements LoaderManager.LoaderCal
     private ShareActionProvider shareActionProvider;
     private String location;
     private String forecast;
+    private String dateString;
 
     private static final int DETAIL_LOADER = 0;
 
@@ -79,13 +80,26 @@ public class DetailsFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onResume() {
         super.onResume();
-        if (null != location && !location.equals(Utility.getPreferredLocation(getActivity()))) {
+        // Using arguments bundle instead of intents since the activity will pass them now.
+        Bundle args = getArguments();
+        if (null != args && args.containsKey(DetailsActivity.DATE_KEY) && null != location && !location.equals(Utility.getPreferredLocation(getActivity()))) {
             getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        // Get arguments bundle
+        Bundle args = getArguments();
+        if (null != args) {
+            dateString = args.getString(DetailsActivity.DATE_KEY);
+        }
+
+        if (null != savedInstanceState) {
+            location = savedInstanceState.getString(LOCATION_KEY);
+        }
+
         View rootView = inflater.inflate(R.layout.fragment_details, container, false);
         mIconView = (ImageView) rootView.findViewById(R.id.detail_icon);
         mDateView = (TextView) rootView.findViewById(R.id.detail_date_textview);
@@ -123,28 +137,20 @@ public class DetailsFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
         if (null != savedInstanceState) {
             location = savedInstanceState.getString(LOCATION_KEY);
         }
-        super.onActivityCreated(savedInstanceState);
+        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 
-        Intent receivedIntent = getActivity().getIntent();
-
-        // Early return.
-        if (null == receivedIntent || !receivedIntent.hasExtra(DATE_KEY)) {
-            return null;
-        }
-
-        String forecastDate = receivedIntent.getStringExtra(DATE_KEY);
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATETEXT + " ASC";
 
         location = Utility.getPreferredLocation(getActivity());
-        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(location, forecastDate);
+        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(location, dateString);
         return new CursorLoader(getActivity(),
                 weatherForLocationUri,
                 FORECAST_COLUMNS,

@@ -10,18 +10,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements ForecastFragment.Callback {
 
     public static final String TAG = "MainActivity";
+
+    private boolean isTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
-                    .commit();
+        // Figure out if details fragment layout is present.
+        if (findViewById(R.id.weather_details_container) != null) {
+            isTwoPane = true;
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.weather_details_container, new DetailsFragment())
+                        .commit();
+            }
+        } else {
+            isTwoPane = false;
         }
     }
 
@@ -61,4 +69,21 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    @Override
+    public void onItemSelected(String date) {
+        if (isTwoPane) {
+            // Here need to replace the details fragment with the respective selected item.
+            Bundle args = new Bundle();
+            args.putString(DetailsActivity.DATE_KEY, date);
+
+            DetailsFragment fragment = new DetailsFragment();
+            fragment.setArguments(args);
+            getSupportFragmentManager().beginTransaction().replace(R.id.weather_details_container, fragment).commit();
+
+        } else {
+            // Otherwise just use an intent to start a new activity.
+            Intent intent = new Intent(this, DetailsActivity.class).putExtra(DetailsActivity.DATE_KEY, date);
+            startActivity(intent);
+        }
+    }
 }

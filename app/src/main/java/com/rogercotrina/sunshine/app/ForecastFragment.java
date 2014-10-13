@@ -1,6 +1,5 @@
 package com.rogercotrina.sunshine.app;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -56,6 +55,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public static final int COL_LOCATION_SETTING = 5;
     public static final int COL_WEATHER_CONDITION_ID = 6;
 
+    /**
+     * Callback for activities that use this fragment and must implement.
+     */
+    public interface Callback {
+        public void onItemSelected(String date);
+    }
+
     public ForecastFragment() {
     }
 
@@ -93,6 +99,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         return super.onOptionsItemSelected(item);
     }
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -107,9 +115,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = listAdapter.getCursor();
                 if (null != cursor && cursor.moveToPosition(position)) {
-                    Intent intent = new Intent(getActivity(), DetailsActivity.class)
-                            .putExtra(DetailsFragment.DATE_KEY, cursor.getString(COL_WEATHER_DATE));
-                    startActivity(intent);
+                    ((Callback) getActivity()).onItemSelected(cursor.getString(COL_WEATHER_DATE));
                 }
             }
         });

@@ -9,13 +9,26 @@ import android.view.MenuItem;
 
 public class DetailsActivity extends ActionBarActivity {
 
+    public static final String DATE_KEY = "forecast_date";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
         if (savedInstanceState == null) {
+
+            // Create fragment and add it to the activity.
+            String date = getIntent().getStringExtra(DATE_KEY);
+
+            Bundle args = new Bundle();
+            args.putString(DetailsActivity.DATE_KEY, date);
+
+            DetailsFragment detailsFragment = new DetailsFragment();
+            detailsFragment.setArguments(args);
+
+            // Adding the arguments values to the fragment received from the intent.
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new DetailsFragment())
+                    .add(R.id.weather_details_container, detailsFragment)
                     .commit();
         }
     }
