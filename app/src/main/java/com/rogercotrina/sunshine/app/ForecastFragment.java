@@ -33,6 +33,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private static final int FORECAST_LOADER = 0;
     private String location;
+    private ListView listView;
+    private int positionInList = ListView.INVALID_POSITION;
+
+    private static final String SELECTED_KEY = "selected_position";
 
     // For the forecast view we're showing only a small subset of the stored data.
     // Specify the columns we need.
@@ -108,17 +112,22 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         listAdapter = new ForecastAdapter(getActivity(), null, 0);
 
-        ListView weatherList = (ListView) rootView.findViewById(R.id.listview_forecast);
-        weatherList.setAdapter(listAdapter);
-        weatherList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView= (ListView) rootView.findViewById(R.id.listview_forecast);
+        listView.setAdapter(listAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor cursor = listAdapter.getCursor();
                 if (null != cursor && cursor.moveToPosition(position)) {
                     ((Callback) getActivity()).onItemSelected(cursor.getString(COL_WEATHER_DATE));
                 }
+                positionInList = position;
             }
         });
+
+        if (null != savedInstanceState && savedInstanceState.containsKey(SELECTED_KEY)) {
+            positionInList = savedInstanceState.getInt(SELECTED_KEY);
+        }
 
         return rootView;
     }
@@ -152,6 +161,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor dataCursor) {
         listAdapter.swapCursor(dataCursor);
+        if (positionInList != ListView.INVALID_POSITION) {
+            // smoothly restore to position in listview.
+            listView.smoothScrollToPosition(positionInList);
+        }
     }
 
     @Override
@@ -164,4 +177,11 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         new FetchWeatherTask(getActivity()).execute(location);
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (positionInList != ListView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, positionInList);
+        }
+        super.onSaveInstanceState(outState);
+    }
 }

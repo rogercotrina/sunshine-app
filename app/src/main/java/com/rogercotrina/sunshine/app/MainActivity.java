@@ -21,11 +21,11 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // Figure out if details fragment layout is present.
-        if (findViewById(R.id.weather_details_container) != null) {
+        if (findViewById(R.id.weather_detail_container) != null) {
             isTwoPane = true;
             if (savedInstanceState == null) {
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.weather_details_container, new DetailsFragment())
+                        .add(R.id.weather_detail_container, new DetailsFragment())
                         .commit();
             }
         } else {
@@ -78,7 +78,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
 
             DetailsFragment fragment = new DetailsFragment();
             fragment.setArguments(args);
-            getSupportFragmentManager().beginTransaction().replace(R.id.weather_details_container, fragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.weather_detail_container, fragment).commit();
 
         } else {
             // Otherwise just use an intent to start a new activity.

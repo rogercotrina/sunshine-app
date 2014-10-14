@@ -168,49 +168,49 @@ public class DetailsFragment extends Fragment implements LoaderManager.LoaderCal
             int weatherId = cursor.getInt(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID));
             mIconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
 
-        }
+            // Read date from cursor and update views for day of week and date
+            String date = cursor.getString(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DATETEXT));
+            String friendlyDateText = Utility.getDayName(getActivity(), date);
+            String dateText = Utility.getFormattedMonthDay(getActivity(), date);
+            mFriendlyDateView.setText(friendlyDateText);
+            mDateView.setText(dateText);
 
-        // Read date from cursor and update views for day of week and date
-        String date = cursor.getString(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DATETEXT));
-        String friendlyDateText = Utility.getDayName(getActivity(), date);
-        String dateText = Utility.getFormattedMonthDay(getActivity(), date);
-        mFriendlyDateView.setText(friendlyDateText);
-        mDateView.setText(dateText);
+            // Read description from cursor and update view
+            String description = cursor.getString(cursor.getColumnIndex(
+                    WeatherContract.WeatherEntry.COLUMN_SHORT_DESC));
+            mDescriptionView.setText(description);
 
-        // Read description from cursor and update view
-        String description = cursor.getString(cursor.getColumnIndex(
-                WeatherContract.WeatherEntry.COLUMN_SHORT_DESC));
-        mDescriptionView.setText(description);
+            // Read high temperature from cursor and update view
+            boolean isMetric = Utility.isMetric(getActivity());
 
-        // Read high temperature from cursor and update view
-        boolean isMetric = Utility.isMetric(getActivity());
+            double high = cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP));
+            String highString = Utility.formatTemperature(getActivity(), high, isMetric);
+            mHighTempView.setText(highString);
 
-        double high = cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP));
-        String highString = Utility.formatTemperature(getActivity(), high, isMetric);
-        mHighTempView.setText(highString);
+            // Read low temperature from cursor and update view
+            double low = cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP));
+            String lowString = Utility.formatTemperature(getActivity(), low, isMetric);
+            mLowTempView.setText(lowString);
 
-        // Read low temperature from cursor and update view
-        double low = cursor.getDouble(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP));
-        String lowString = Utility.formatTemperature(getActivity(), low, isMetric);
-        mLowTempView.setText(lowString);
+            // Read humidity from cursor and update view
+            float humidity = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_HUMIDITY));
+            mHumidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
 
-        // Read humidity from cursor and update view
-        float humidity = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_HUMIDITY));
-        mHumidityView.setText(getActivity().getString(R.string.format_humidity, humidity));
+            // Read wind speed and direction from cursor and update view
+            float windSpeedStr = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WIND_SPEED));
+            float windDirStr = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DEGREES));
+            mWindView.setText(Utility.getFormattedWind(getActivity(), windSpeedStr, windDirStr));
 
-        // Read wind speed and direction from cursor and update view
-        float windSpeedStr = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WIND_SPEED));
-        float windDirStr = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DEGREES));
-        mWindView.setText(Utility.getFormattedWind(getActivity(), windSpeedStr, windDirStr));
+            // Read pressure from cursor and update view
+            float pressure = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_PRESSURE));
+            mPressureView.setText(getActivity().getString(R.string.format_pressure, pressure));
 
-        // Read pressure from cursor and update view
-        float pressure = cursor.getFloat(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_PRESSURE));
-        mPressureView.setText(getActivity().getString(R.string.format_pressure, pressure));
+            forecast = String.format("%s - %s - %s/%s", dateText, description, high, low);
 
-        forecast = String.format("%s - %s - %s/%s", dateText, description, high, low);
+            if (null != shareActionProvider) {
+                shareActionProvider.setShareIntent(getDefaultShareIntent());
+            }
 
-        if (null != shareActionProvider) {
-            shareActionProvider.setShareIntent(getDefaultShareIntent());
         }
 
     }
