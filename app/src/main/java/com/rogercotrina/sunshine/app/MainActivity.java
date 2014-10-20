@@ -31,6 +31,11 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
         } else {
             isTwoPane = false;
         }
+
+        // Setting use of two pane for determining use of today layout.
+        ForecastFragment forecastFragment =  (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
+        forecastFragment.setUseTodayLayout(!isTwoPane);
+
     }
 
     @Override

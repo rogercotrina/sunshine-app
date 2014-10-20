@@ -36,6 +36,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     private ListView listView;
     private int positionInList = ListView.INVALID_POSITION;
 
+    private boolean useTodayLayout;
+
     private static final String SELECTED_KEY = "selected_position";
 
     // For the forecast view we're showing only a small subset of the stored data.
@@ -129,7 +131,16 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             positionInList = savedInstanceState.getInt(SELECTED_KEY);
         }
 
+        listAdapter.setUseTodayLayout(useTodayLayout);
+
         return rootView;
+    }
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        this.useTodayLayout = useTodayLayout;
+        if (null != listAdapter) {
+            listAdapter.setUseTodayLayout(useTodayLayout);
+        }
     }
 
     @Override

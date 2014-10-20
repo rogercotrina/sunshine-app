@@ -1,7 +1,9 @@
 package com.rogercotrina.sunshine.app;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
+ * Custom adapter to display the different forecast days using a cursor from a content loader.
  * Created by rogercotrina on 9/1/14.
  */
 public class ForecastAdapter extends CursorAdapter {
@@ -19,8 +22,15 @@ public class ForecastAdapter extends CursorAdapter {
     private static final int VIEW_TYPE_TODAY = 0;
     private static final int VIEW_TYPE_FUTURE_DAY = 1;
 
+    private boolean useTodayLayout = true;
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public ForecastAdapter(Context context, Cursor cursor, int flags) {
         super(context, cursor, flags);
+    }
+
+    public void setUseTodayLayout(boolean useTodayLayout) {
+        this.useTodayLayout = useTodayLayout;
     }
 
     @Override
@@ -45,7 +55,7 @@ public class ForecastAdapter extends CursorAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return position == 0 ? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
+        return (position == 0 && useTodayLayout)? VIEW_TYPE_TODAY : VIEW_TYPE_FUTURE_DAY;
     }
 
     @Override
